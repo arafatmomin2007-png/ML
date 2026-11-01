@@ -1,0 +1,61 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+
+df = pd.read_csv(
+    "https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"
+)
+
+print("First 5 records of raw dataset:")
+display(df.head())
+print("\nDataset Shape (rows, columns):", df.shape)
+
+print("Missing values per column before treatment:")
+print(df.isnull().sum())
+
+age_median = df["Age"].median()
+df["Age"] = df["Age"].fillna(age_median)
+
+embarked_mode = df["Embarked"].mode()[0]
+df["Embarked"] = df["Embarked"].fillna(embarked_mode)
+
+df = df.drop(
+    columns=["Cabin", "PassengerId", "Name", "Ticket"], errors="ignore"
+)
+
+print(
+    f"Remaining missing values in Age: {df['Age'].isnull().sum()} (Filled with median: {age_median})"
+)
+print(
+    f"Remaining missing values in Embarked: {df['Embarked'].isnull().sum()} (Filled with mode: '{embarked_mode}')"
+)
+
+label_encoder = LabelEncoder()
+df["Sex"] = label_encoder.fit_transform(df["Sex"])
+
+df = pd.get_dummies(df, columns=["Embarked"], drop_first=True, dtype=int)
+
+print("Data preview after categorical encoding:")
+df.head()
+
+numerical_cols = ["Age", "SibSp", "Parch", "Fare"]
+
+scaler = StandardScaler()
+df[numerical_cols] = scaler.fit_transform(df[numerical_cols])
+
+print("Standardization complete for:", numerical_cols)
+df.head()
+print("--- Final Model-Ready Dataset Verification ---")
+
+print("\nMissing values remaining:")
+print(df.isnull().sum())
+
+print("\nColumn data types:")
+print(df.dtypes)
+
+print("\nCleaned and Processed Dataset Preview:")
+display(df.head(10))
+
+df.to_csv("titanic_clean_model_ready.csv", index=False)
+print("\nDataset successfully saved as 'titanic_clean_model_ready.csv'!")
